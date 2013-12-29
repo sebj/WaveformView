@@ -1,5 +1,6 @@
 WaveformView
 ============
+![WaveformView Preview](https://github.com/sebj/WaveformView/blob/master/Preview.png?raw=true)
 
 My take on an NSView subclass that can display the waveform for an audio file, allowing customisability of colors, play/stop control and image generation (from the view).
 
