@@ -16,6 +16,8 @@
     id originalDelegate;
     
     NSTimer *refreshTimer;
+    
+    void(^finishBlock)();
 }
 
 /**
@@ -27,14 +29,18 @@
 @property (strong) NSColor *backgroundColor;
 @property (strong) NSColor *inactiveColor;
 
+/*
+ * View takes control of the recorder. Recommended to use methods below.
+ */
 @property (strong, setter = attachToRecorder:) AVAudioRecorder *recorder;
 
 /**
- * The following methods take over from AVAudioRecorder, taking over from AVAudioRecorder:
+ * The following methods take over from AVAudioRecorder:
  */
 
 - (void)record;
 - (void)recordForDuration:(NSTimeInterval)aDuration;
+- (void)recordForDuration:(NSTimeInterval)aDuration FinishBlock:(void (^)())aBlock;
 
 - (void)stop;
 

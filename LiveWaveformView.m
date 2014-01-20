@@ -44,20 +44,26 @@ double map(double x, double in_min, double in_max, double out_min, double out_ma
 }
 
 - (void)record {
-    [self prepareToRecord];
-    
-    [_recorder record];
-    
-    // 40/s - good idea or not? : s
-    refreshTimer = [NSTimer scheduledTimerWithTimeInterval:0.025 target:self selector:@selector(refresh) userInfo:nil repeats:YES];
+    [self recordForDuration:0.0 FinishBlock:nil];
 }
 
 - (void)recordForDuration:(NSTimeInterval)aDuration {
+    [self recordForDuration:aDuration FinishBlock:nil];
+}
+
+- (void)recordForDuration:(NSTimeInterval)aDuration FinishBlock:(void (^)())aBlock {
     [self prepareToRecord];
     
-    [_recorder recordForDuration:aDuration];
+    if (aDuration > 0.0) {
+        [_recorder recordForDuration:aDuration];
+    } else {
+        [_recorder record];
+    }
     
-    refreshTimer = [NSTimer scheduledTimerWithTimeInterval:0.1 target:self selector:@selector(refresh) userInfo:nil repeats:YES];
+    // 40/s - good idea or not? : s
+    refreshTimer = [NSTimer scheduledTimerWithTimeInterval:0.025 target:self selector:@selector(refresh) userInfo:nil repeats:YES];
+    
+    finishBlock = aBlock;
 }
 
 - (void)stop {
@@ -102,6 +108,10 @@ double map(double x, double in_min, double in_max, double out_min, double out_ma
     [refreshTimer invalidate];
     refreshTimer = nil;
     
+    if (finishBlock) {
+        finishBlock();
+    }
+    
     [self finishedRecording];
 }
 
@@ -113,9 +123,7 @@ double map(double x, double in_min, double in_max, double out_min, double out_ma
 
 - (void)refresh {
     if (_recorder && _recorder.isRecording) {
-        //Overflow a bit, in case user resizes.
-        
-        if (samples.count*_sampleWidth > _bounds.size.width*1.4) {
+        if (samples.count*_sampleWidth > _bounds.size.width) {
             [samples removeObjectAtIndex:0];
         }
         
