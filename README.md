@@ -4,6 +4,10 @@ WaveformView
 
 My take on an NSView subclass that can display the waveform for an audio file, allowing customisability of colors, play/stop control and image generation (from the view).
 
+This probably isn't the best or most accurate way to show a waveform, but it's something I coded for a project that I thought might be useful to others in some way.
+
+###Classes
+
 ===
 
 ```WaveformView``` is the general waveform view, that can load a .wav file and display it.
