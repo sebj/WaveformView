@@ -23,11 +23,11 @@
 /**
  * Width to plot each sample - default is 2.0.
  */
-@property float sampleWidth;
+IBInspectable @property float sampleWidth;
 
-@property (strong) NSColor *foregroundColor;
-@property (strong) NSColor *backgroundColor;
-@property (strong) NSColor *inactiveColor;
+IBInspectable @property (strong) NSColor *foregroundColor;
+IBInspectable @property (strong) NSColor *backgroundColor;
+IBInspectable @property (strong) NSColor *inactiveColor;
 
 /*
  * View takes control of the recorder. Recommended to use methods below.

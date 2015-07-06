@@ -25,9 +25,9 @@
  * See WaveformView.h
  */
 
-@property BOOL trimEnabled;
+IBInspectable @property BOOL trimEnabled;
 
-@property (strong) NSColor *trimHandleColor;
-@property (strong) NSColor *inactiveColor;
+IBInspectable @property (strong) NSColor *trimHandleColor;
+IBInspectable @property (strong) NSColor *inactiveColor;
 
 @end

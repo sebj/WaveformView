@@ -32,13 +32,11 @@ double map(double x, double in_min, double in_max, double out_min, double out_ma
 #pragma mark Recording
 
 - (void)prepareToRecord {
-    samples = [[NSMutableArray alloc] init];
+    samples = [NSMutableArray new];
     
-    [_recorder setMeteringEnabled:YES];
+    _recorder.meteringEnabled = YES;
     
-    if (_recorder.delegate) {
-        originalDelegate = _recorder.delegate;
-    }
+    if (_recorder.delegate) originalDelegate = _recorder.delegate;
     
     _recorder.delegate = self;
 }
@@ -56,11 +54,12 @@ double map(double x, double in_min, double in_max, double out_min, double out_ma
     
     if (aDuration > 0.0) {
         [_recorder recordForDuration:aDuration];
+        
     } else {
         [_recorder record];
     }
     
-    // 40/s - good idea or not? : s
+    // 40/s
     refreshTimer = [NSTimer scheduledTimerWithTimeInterval:0.025 target:self selector:@selector(refresh) userInfo:nil repeats:YES];
     
     finishBlock = aBlock;
@@ -108,9 +107,7 @@ double map(double x, double in_min, double in_max, double out_min, double out_ma
     [refreshTimer invalidate];
     refreshTimer = nil;
     
-    if (finishBlock) {
-        finishBlock();
-    }
+    if (finishBlock) finishBlock();
     
     [self finishedRecording];
 }
@@ -123,9 +120,8 @@ double map(double x, double in_min, double in_max, double out_min, double out_ma
 
 - (void)refresh {
     if (_recorder && _recorder.isRecording) {
-        if (samples.count*_sampleWidth > _bounds.size.width) {
+        if (samples.count*_sampleWidth > _bounds.size.width)
             [samples removeObjectAtIndex:0];
-        }
         
         [_recorder updateMeters];
         [samples addObject:@(round([_recorder averagePowerForChannel:0]))];
@@ -135,9 +131,9 @@ double map(double x, double in_min, double in_max, double out_min, double out_ma
 }
 
 - (void)viewDidEndLiveResize {
-#ifdef DEBUG
-    NSLog(@"Resize ended");
-#endif
+    #ifdef DEBUG
+    NSLog(@"LiveWaveformView: Resize ended");
+    #endif
     
     self.needsDisplay = YES;
 }

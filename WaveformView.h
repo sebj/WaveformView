@@ -28,16 +28,16 @@
  */
 @property (readonly) double duration;
 
-@property BOOL trimEnabled;
+IBInspectable @property BOOL trimEnabled;
 /**
  * Returns time range using trimming handle. If trimming is disabled, trimRange is kkCMTimeZero, kCMTimePositiveInfinity
  */
 @property (readonly) CMTimeRange trimRange;
 
-@property (strong) NSColor *foregroundColor;
-@property (strong) NSColor *backgroundColor;
-@property (strong) NSColor *trimHandleColor;
-@property (strong) NSColor *inactiveColor;
+@property (strong) IBInspectable NSColor *foregroundColor;
+@property (strong) IBInspectable NSColor *backgroundColor;
+@property (strong) IBInspectable NSColor *trimHandleColor;
+@property (strong) IBInspectable NSColor *inactiveColor;
 
 
 - (BOOL)loadFileWithPath:(NSString*)filePath;

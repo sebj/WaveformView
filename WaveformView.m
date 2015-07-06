@@ -28,8 +28,8 @@
     NSRect myRect = NSMakeRect(0, 0, kTrimSliderKnobWidth, kTrimSliderKnobHeight);
     
     //Added abs() to round/crispen pixels - even if it is slightly off
-    myRect.origin.x = abs(value * (self.controlView.frame.size.width - kTrimSliderKnobWidth));
-    myRect.origin.y = abs(defaultRect.origin.y + defaultRect.size.height/2.0 - myRect.size.height/2.0);
+    myRect.origin.x = round(value * (self.controlView.frame.size.width - kTrimSliderKnobWidth));
+    myRect.origin.y = round(defaultRect.origin.y + defaultRect.size.height/2.0 - myRect.size.height/2.0);
     
     return myRect;
 }
@@ -72,7 +72,7 @@
         [self addObserver:self forKeyPath:@"trimEnabled" options:0 context:NULL];
         
         trimSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(0, (_bounds.size.height-21)/2, 1, 21)];
-        [trimSlider setCell:[[TrimSliderCell alloc] init]];
+        trimSlider.cell = [TrimSliderCell new];
         trimSlider.target = self;
         trimSlider.action = @selector(sliderChanged);
         
@@ -113,33 +113,28 @@
 }
 
 - (void)stop {
-    if (player && player.isPlaying) {
-        [player stop];
-    }
+    if (player && player.isPlaying) [player stop];
 }
 
 #pragma mark React to Changes
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-    if (object == self && [keyPath isEqualToString:@"trimEnabled"]) {
+    if (object == self && [keyPath isEqualToString:@"trimEnabled"])
         [self updateTrimSlider];
-    }
 }
 
 - (void)sliderChanged {
-    //Constrain slider - why would you want to go less?!1?
-    if (trimSlider.doubleValue <= 0.5) {
-        [trimSlider setDoubleValue:0.5];
-    }
+    //Constrain slider
+    if (trimSlider.doubleValue <= 0.5) [trimSlider setDoubleValue:0.5];
     
     self.needsDisplay = YES;
     _trimRange = CMTimeRangeMake(kCMTimeZero, CMTimeMakeWithSeconds(trimSlider.doubleValue, 1));
 }
 
 - (void)viewDidEndLiveResize {
-#ifdef DEBUG
+    #ifdef DEBUG
     NSLog(@"Resize ended");
-#endif
+    #endif
     
     cacheImage = nil;
     [self processWaveformForAsset:currentAsset];
@@ -153,22 +148,20 @@
     
     if (currentAsset) {
         if (points) {
-            if (!cacheImage) {
-                cacheImage = [self waveformImage];
-            }
+            if (!cacheImage) cacheImage = [self waveformImage];
             
             //Stretch image vertically
             if (!NSEqualSizes(_bounds.size, cacheImage.size)) {
                 NSImage *image = [[NSImage alloc] initWithSize:_bounds.size];
                 [image lockFocus];
-                NSGraphicsContext *ctxt = [NSGraphicsContext currentContext];
-                [ctxt setShouldAntialias:NO];
-                [ctxt setImageInterpolation:NSImageInterpolationNone];
+                NSGraphicsContext *ctxt = NSGraphicsContext.currentContext;
+                ctxt.shouldAntialias = NO;
+                ctxt.imageInterpolation = NSImageInterpolationNone;
                 
                 [cacheImage drawInRect:NSMakeRect(0, 0, cacheImage.size.width, _bounds.size.height) fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
                 
-                [ctxt setShouldAntialias:YES];
-                [ctxt setImageInterpolation:NSImageInterpolationDefault];
+                ctxt.shouldAntialias = YES;
+                ctxt.imageInterpolation = NSImageInterpolationDefault;
                 [image unlockFocus];
                 
                 cacheImage = image;
@@ -218,12 +211,12 @@
         [_foregroundColor? _foregroundColor : kDefaultForegroundColor setStroke];
         [path setLineWidth:2.0f];
         
-        NSGraphicsContext *ctxt = [NSGraphicsContext currentContext];
-        [ctxt setShouldAntialias:NO];
+        NSGraphicsContext *ctxt = NSGraphicsContext.currentContext;
+        ctxt.shouldAntialias = NO;
         
         [path stroke];
         
-        [ctxt setShouldAntialias:YES];
+        ctxt.shouldAntialias = YES;
     }
 }
 
@@ -239,6 +232,7 @@
     if (!_trimEnabled && trimSlider.superview == self) {
         [trimSlider removeFromSuperview];
         _trimRange = CMTimeRangeMake(kCMTimeZero, kCMTimePositiveInfinity);
+        
     } else if (_trimEnabled && trimSlider.superview != self) {
         [self addSubview:trimSlider];
         _trimRange = CMTimeRangeMake(kCMTimeZero, CMTimeMakeWithSeconds(_duration, 1));
@@ -249,158 +243,149 @@
 
 //From FDWaveformView by William Entriken - https://github.com/fulldecent/FDWaveformView/blob/master/FDWaveformView/FDWaveformView.m
 - (BOOL)processWaveformForAsset:(AVURLAsset *)songAsset {
-    if (currentAsset) {
-#ifdef DEBUG
-        NSLog(@"Started processing");
-#endif
-        
-        NSError *error;
-        
-        AVAssetReader *reader = [[AVAssetReader alloc] initWithAsset:songAsset error:&error];
-        
-        if (error) {
-            NSLog(@"WaveformView Error: %@",error);
-            
-            return NO;
+    if (!currentAsset) return NO;
+    
+    #ifdef DEBUG
+    NSLog(@"WaveformView: Started processing");
+    #endif
+    
+    NSError *error;
+    
+    AVAssetReader *reader = [[AVAssetReader alloc] initWithAsset:songAsset error:&error];
+    
+    if (error) {
+        NSLog(@"WaveformView Error: %@",error);
+        return NO;
+    }
+    
+    AVAssetTrack *songTrack = (songAsset.tracks)[0];
+    _duration = CMTimeGetSeconds(songTrack.timeRange.duration);
+    
+    AVAssetReaderTrackOutput *output = [[AVAssetReaderTrackOutput alloc] initWithTrack:songTrack outputSettings:kSettings];
+    
+    [reader addOutput:output];
+    
+    UInt32 sampleRate, channelCount;
+    
+    NSArray *formatDesc = songTrack.formatDescriptions;
+    for (unsigned int i = 0; i < formatDesc.count; ++i) {
+        CMAudioFormatDescriptionRef item = (__bridge CMAudioFormatDescriptionRef)formatDesc[i];
+        const AudioStreamBasicDescription *fmtDesc = CMAudioFormatDescriptionGetStreamBasicDescription(item);
+        if (fmtDesc) {
+            sampleRate = fmtDesc->mSampleRate;
+            channelCount = fmtDesc->mChannelsPerFrame;
         }
+    }
+    
+    UInt32 bytesPerSample = 2*channelCount;
+    Float32 normalizeMax = noiseFloor;
+    NSMutableData *fullSongData = [NSMutableData new];
+    [reader startReading];
+    
+    UInt64 totalBytes = 0;
+    
+    Float64 totalLeft = 0;
+    Float64 totalRight = 0;
+    Float32 sampleTally = 0;
+    
+    NSInteger samplesPerPixel = sampleRate/50;
+    
+    while (reader.status == AVAssetReaderStatusReading){
+        AVAssetReaderTrackOutput *trackOutput = (AVAssetReaderTrackOutput*)(reader.outputs)[0];
+        CMSampleBufferRef sampleBufferRef = [trackOutput copyNextSampleBuffer];
         
-        AVAssetTrack *songTrack = (songAsset.tracks)[0];
-        _duration = CMTimeGetSeconds(songTrack.timeRange.duration);
-        
-        AVAssetReaderTrackOutput *output = [[AVAssetReaderTrackOutput alloc] initWithTrack:songTrack outputSettings:kSettings];
-        
-        [reader addOutput:output];
-        
-        UInt32 sampleRate, channelCount;
-        
-        NSArray *formatDesc = songTrack.formatDescriptions;
-        for (unsigned int i = 0; i < formatDesc.count; ++i) {
-            CMAudioFormatDescriptionRef item = (__bridge CMAudioFormatDescriptionRef)formatDesc[i];
-            const AudioStreamBasicDescription *fmtDesc = CMAudioFormatDescriptionGetStreamBasicDescription(item);
-            if (fmtDesc) {
-                sampleRate = fmtDesc->mSampleRate;
-                channelCount = fmtDesc->mChannelsPerFrame;
-            }
-        }
-        
-        UInt32 bytesPerSample = 2*channelCount;
-        Float32 normalizeMax = noiseFloor;
-        NSMutableData *fullSongData = [[NSMutableData alloc] init];
-        [reader startReading];
-        
-        UInt64 totalBytes = 0;
-        
-        Float64 totalLeft = 0;
-        Float64 totalRight = 0;
-        Float32 sampleTally = 0;
-        
-        NSInteger samplesPerPixel = sampleRate/50;
-        
-        while (reader.status == AVAssetReaderStatusReading){
-            AVAssetReaderTrackOutput *trackOutput = (AVAssetReaderTrackOutput*)(reader.outputs)[0];
-            CMSampleBufferRef sampleBufferRef = [trackOutput copyNextSampleBuffer];
+        if (sampleBufferRef){
+            CMBlockBufferRef blockBufferRef = CMSampleBufferGetDataBuffer(sampleBufferRef);
             
-            if (sampleBufferRef){
-                CMBlockBufferRef blockBufferRef = CMSampleBufferGetDataBuffer(sampleBufferRef);
+            size_t length = CMBlockBufferGetDataLength(blockBufferRef);
+            totalBytes += length;
+            
+            @autoreleasepool {
+                NSMutableData *data = [NSMutableData dataWithLength:length];
+                CMBlockBufferCopyDataBytes(blockBufferRef, 0, length, data.mutableBytes);
                 
-                size_t length = CMBlockBufferGetDataLength(blockBufferRef);
-                totalBytes += length;
                 
-                @autoreleasepool {
-                    NSMutableData *data = [NSMutableData dataWithLength:length];
-                    CMBlockBufferCopyDataBytes(blockBufferRef, 0, length, data.mutableBytes);
+                SInt16 *samples = (SInt16 *)data.mutableBytes;
+                unsigned long sampleCount = length/bytesPerSample;
+                for (int i = 0; i < sampleCount; i++) {
+                    
+                    Float32 left = (Float32) *samples++;
+                    left = decibel(left);
+                    left = minMaxX(left,noiseFloor,0);
+                    
+                    totalLeft += left;
                     
                     
-                    SInt16 *samples = (SInt16 *) data.mutableBytes;
-                    unsigned long sampleCount = length/bytesPerSample;
-                    for (int i = 0; i < sampleCount; i++) {
+                    Float32 right;
+                    if (channelCount == 2) {
+                        right = (Float32) *samples++;
+                        right = decibel(right);
+                        right = minMaxX(right,noiseFloor,0);
                         
-                        Float32 left = (Float32) *samples++;
-                        left = decibel(left);
-                        left = minMaxX(left,noiseFloor,0);
+                        totalRight += right;
+                    }
+                    
+                    sampleTally++;
+                    
+                    if (sampleTally > samplesPerPixel) {
                         
-                        totalLeft += left;
+                        left  = totalLeft/sampleTally;
+                        if (left > normalizeMax) normalizeMax = left;
                         
+                        [fullSongData appendBytes:&left length:sizeof(left)];
                         
-                        
-                        Float32 right;
-                        if (channelCount == 2) {
-                            right = (Float32) *samples++;
-                            right = decibel(right);
-                            right = minMaxX(right,noiseFloor,0);
+                        if (channelCount==2) {
+                            right = totalRight / sampleTally;
                             
-                            totalRight += right;
+                            if (right > normalizeMax) normalizeMax = right;
+                            
+                            [fullSongData appendBytes:&right length:sizeof(right)];
                         }
                         
-                        sampleTally++;
+                        totalLeft   = 0;
+                        totalRight  = 0;
+                        sampleTally = 0;
                         
-                        if (sampleTally > samplesPerPixel) {
-                            
-                            left  = totalLeft/sampleTally;
-                            if (left > normalizeMax) {
-                                normalizeMax = left;
-                            }
-                            
-                            [fullSongData appendBytes:&left length:sizeof(left)];
-                            
-                            if (channelCount==2) {
-                                right = totalRight / sampleTally;
-                                
-                                
-                                if (right > normalizeMax) {
-                                    normalizeMax = right;
-                                }
-                                
-                                [fullSongData appendBytes:&right length:sizeof(right)];
-                            }
-                            
-                            totalLeft   = 0;
-                            totalRight  = 0;
-                            sampleTally = 0;
-                            
-                        }
                     }
                 }
-                
-                CMSampleBufferInvalidate(sampleBufferRef);
-                
-                CFRelease(sampleBufferRef);
             }
+            
+            CMSampleBufferInvalidate(sampleBufferRef);
+            
+            CFRelease(sampleBufferRef);
+        }
+    }
+    
+    if (reader.status == AVAssetReaderStatusCompleted){
+        Float32 *samples = (Float32*)fullSongData.bytes;
+        NSInteger sampleCount = fullSongData.length/(sizeof(Float32)*2);
+        
+        //Actually just taking left channel values to plot
+        
+        float centerLeft = _bounds.size.height/2;
+        float sampleAdjustmentFactor = fabs((_bounds.size.height/(normalizeMax-noiseFloor)/2));
+        
+        points = [NSMutableArray new];
+        
+        for (NSInteger intSample = 0; intSample < sampleCount; intSample++) {
+            Float32 left = *samples++;
+            float pixels = (left - noiseFloor) * sampleAdjustmentFactor;
+            [points addObject:[NSValue valueWithPoint:NSMakePoint(intSample, centerLeft-pixels)]];
+            [points addObject:[NSValue valueWithPoint:NSMakePoint(intSample, centerLeft+pixels)]];
         }
         
-        if (reader.status == AVAssetReaderStatusCompleted){
-            Float32 *samples = (Float32*)fullSongData.bytes;
-            NSInteger sampleCount = fullSongData.length/(sizeof(Float32)*2);
-            
-            //Actually just taking left channel values to plot
-            
-            float centerLeft = _bounds.size.height/2;
-            float sampleAdjustmentFactor = fabsf((_bounds.size.height/(normalizeMax-noiseFloor)/2));
-            
-            points = [[NSMutableArray alloc] init];
-            
-            for (NSInteger intSample = 0; intSample < sampleCount; intSample++) {
-                Float32 left = *samples++;
-                float pixels = (left - noiseFloor) * sampleAdjustmentFactor;
-                [points addObject:[NSValue valueWithPoint:NSMakePoint(intSample, centerLeft-pixels)]];
-                [points addObject:[NSValue valueWithPoint:NSMakePoint(intSample, centerLeft+pixels)]];
-            }
-            
 #ifdef DEBUG
-            NSLog(@"Finished processing");
+        NSLog(@"WaveformView: Finished processing");
 #endif
-            
-            self.needsDisplay = YES;
-            
-            return YES;
-            
-        } else if (reader.status == AVAssetReaderStatusFailed || reader.status == AVAssetReaderStatusUnknown){
-            NSLog(@"WaveformView AVAssetReader%@",reader.error? [NSString stringWithFormat:@" Error: %@",reader.error] : @"");
-            
-            return NO;
-        } else {
-            return NO;
-        }
+        
+        self.needsDisplay = YES;
+        
+        return YES;
+        
+    } else if (reader.status == AVAssetReaderStatusFailed || reader.status == AVAssetReaderStatusUnknown){
+        NSLog(@"WaveformView AVAssetReader%@",reader.error? [NSString stringWithFormat:@" Error: %@",reader.error] : @"");
+        
+        return NO;
     } else {
         return NO;
     }

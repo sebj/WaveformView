@@ -36,7 +36,6 @@
         [inv setSelector:selector];
         [inv setTarget:_fileView];
         
-        
         id obj = [change objectForKey:@"new"];
         
         //Arguments 0 and 1 are self and _cmd respectively, automatically set by NSInvocation
