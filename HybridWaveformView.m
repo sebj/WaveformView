@@ -5,13 +5,13 @@
 // Copyright (c) 2013 Seb Jachec. All rights reserved.
 
 #import "HybridWaveformView.h"
-
-#import "LiveWaveformView.h"
 #import "WaveformView.h"
 
 #define observe(x) [self addObserver:self forKeyPath:x options:NSKeyValueObservingOptionNew context:NULL]
 
 @implementation HybridWaveformView
+
+@dynamic inactiveColor;
 
 - (id)initWithFrame:(NSRect)frame {
     self = [super initWithFrame:frame];
@@ -27,6 +27,13 @@
     return self;
 }
 
+#if TARGET_INTERFACE_BUILDER
+- (void)drawRect:(NSRect)dirtyRect {
+    [NSColor.whiteColor set];
+    NSRectFill(_bounds);
+}
+#endif
+
 //Not the best..
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
     if (object == self && _fileView) {
@@ -36,7 +43,7 @@
         [inv setSelector:selector];
         [inv setTarget:_fileView];
         
-        id obj = [change objectForKey:@"new"];
+        id obj = change[@"new"];
         
         //Arguments 0 and 1 are self and _cmd respectively, automatically set by NSInvocation
         [keyPath isEqualToString:@"trimEnabled"]? [inv setArgument:&_trimEnabled atIndex:2] : [inv setArgument:&(obj) atIndex:2];

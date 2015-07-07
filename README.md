@@ -4,6 +4,8 @@ WaveformView
 
 My take on an NSView subclass that can display the waveform for an audio file, allowing customisability of colors, play/stop control and image generation (from the view).
 
+I'd recommend looking through the code and adapting/modifying to suit your needs.
+
 **Note**
 If you're looking for an extremely accurate high performance visualization of a sound file or live sound recording, there are most likely alternatives that would better suit you.
 

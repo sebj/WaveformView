@@ -10,6 +10,7 @@
 /**
  * Give it an AVAudioRecorder and watch it plot a waveform - live. Customise foreground and background colours. Redirects AVAudioRecorderDelegate methods back to "original" delegate.
  */
+IB_DESIGNABLE
 @interface LiveWaveformView : NSView <AVAudioRecorderDelegate> {
     NSMutableArray *samples;
     

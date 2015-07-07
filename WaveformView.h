@@ -10,18 +10,8 @@
 /**
  * Give it a .wav and watch it plot - customise all colours, and enable trimming handles
  */
-@interface WaveformView : NSView {
-    AVURLAsset *currentAsset;
-    
-    NSMutableArray *points;
-    NSImage *cacheImage;
-    
-    float secondInPixels;
-    NSSlider *trimSlider;
-    
-    AVAudioPlayer *player;
-    NSTimer *stopTimer;
-}
+IB_DESIGNABLE
+@interface WaveformView : NSView
 
 /**
  * Returns sound duration in seconds
@@ -38,6 +28,8 @@ IBInspectable @property BOOL trimEnabled;
 @property (strong) IBInspectable NSColor *backgroundColor;
 @property (strong) IBInspectable NSColor *trimHandleColor;
 @property (strong) IBInspectable NSColor *inactiveColor;
+
+IBInspectable @property BOOL drawsCenterLine;
 
 
 - (BOOL)loadFileWithPath:(NSString*)filePath;

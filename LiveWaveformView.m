@@ -7,8 +7,8 @@
 #import "LiveWaveformView.h"
 #import "math.h"
 
-#define kDefaultBackgroundColor [NSColor whiteColor]
-#define kDefaultForegroundColor [NSColor blackColor]
+#define kDefaultBackgroundColor NSColor.whiteColor
+#define kDefaultForegroundColor NSColor.blackColor
 #define kDefaultInactiveColor [NSColor colorWithCalibratedWhite:0.1 alpha:1.0]
 
 @implementation LiveWaveformView
@@ -120,8 +120,7 @@ double map(double x, double in_min, double in_max, double out_min, double out_ma
 
 - (void)refresh {
     if (_recorder && _recorder.isRecording) {
-        if (samples.count*_sampleWidth > _bounds.size.width)
-            [samples removeObjectAtIndex:0];
+        if (samples.count*_sampleWidth > _bounds.size.width) [samples removeObjectAtIndex:0];
         
         [_recorder updateMeters];
         [samples addObject:@(round([_recorder averagePowerForChannel:0]))];
