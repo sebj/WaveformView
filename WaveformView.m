@@ -6,6 +6,7 @@
 
 #import <AVFoundation/AVFoundation.h>
 #import "WaveformView.h"
+#import "WaveformViewShared.h"
 
 #pragma mark - Trim Slider
 
@@ -26,7 +27,6 @@
     NSRect defaultRect = [super knobRectFlipped:flipped];
     NSRect myRect = NSMakeRect(0, 0, TrimSliderKnobWidth, TrimSliderKnobHeight);
     
-    //Added abs() to round/crispen pixels - even if it is slightly off
     myRect.origin.x = round(value * (self.controlView.frame.size.width - TrimSliderKnobWidth));
     myRect.origin.y = round(defaultRect.origin.y + defaultRect.size.height/2.0 - myRect.size.height/2.0);
     
@@ -70,27 +70,35 @@
 
 #define Settings @{AVFormatIDKey:@(kAudioFormatLinearPCM), AVNumberOfChannelsKey:@2.0}
 
-#define DefaultBackgroundColor NSColor.whiteColor
-#define DefaultForegroundColor NSColor.blackColor
-#define DefaultInactiveColor [NSColor colorWithCalibratedWhite:0.1 alpha:1.0]
-
 @implementation WaveformView
 
-- (id)initWithFrame:(NSRect)frame {
+- (instancetype)initWithFrame:(NSRect)frame {
     self = [super initWithFrame:frame];
     if (self) {
-        [self addObserver:self forKeyPath:@"trimEnabled" options:0 context:NULL];
-        
-        trimSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(0, (_bounds.size.height-21)/2, 1, 21)];
-        trimSlider.cell = [TrimSliderCell new];
-        trimSlider.target = self;
-        trimSlider.action = @selector(sliderChanged);
-        
-        _backgroundColor = DefaultBackgroundColor;
-        _foregroundColor = DefaultForegroundColor;
-        _inactiveColor = DefaultInactiveColor;
+        [self setup];
     }
     return self;
+}
+
+- (instancetype)initWithCoder:(NSCoder *)coder {
+    self = [super initWithCoder:coder];
+    if (self) {
+        [self setup];
+    }
+    return self;
+}
+
+- (void)setup {
+    [self addObserver:self forKeyPath:@"trimEnabled" options:0 context:NULL];
+    
+    trimSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(0, (_bounds.size.height-21)/2, 1, 21)];
+    trimSlider.cell = [TrimSliderCell new];
+    trimSlider.target = self;
+    trimSlider.action = @selector(sliderChanged);
+    
+    _backgroundColor = DefaultBackgroundColor;
+    _foregroundColor = DefaultForegroundColor;
+    _inactiveColor = DefaultInactiveColor;
 }
 
 #pragma mark Load files

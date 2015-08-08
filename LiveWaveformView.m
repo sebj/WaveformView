@@ -6,10 +6,7 @@
 
 #import "LiveWaveformView.h"
 #import "math.h"
-
-#define kDefaultBackgroundColor NSColor.whiteColor
-#define kDefaultForegroundColor NSColor.blackColor
-#define kDefaultInactiveColor [NSColor colorWithCalibratedWhite:0.1 alpha:1.0]
+#import "WaveformViewShared.h"
 
 @implementation LiveWaveformView
 
@@ -22,11 +19,18 @@ double map(double x, double in_min, double in_max, double out_min, double out_ma
 
 - (id)initWithFrame:(NSRect)frame {
     self = [super initWithFrame:frame];
-    if (self) {
-        _sampleWidth = 2.0f;
-    }
-    
+    if (self) [self setup];
     return self;
+}
+
+- (instancetype)initWithCoder:(NSCoder *)coder {
+    self = [super initWithCoder:coder];
+    if (self) [self setup];
+    return self;
+}
+
+- (void)setup {
+    _sampleWidth = 2.0f;
 }
 
 #pragma mark Recording
@@ -138,20 +142,20 @@ double map(double x, double in_min, double in_max, double out_min, double out_ma
 }
 
 - (void)drawRect:(NSRect)dirtyRect {
-    [_backgroundColor? _backgroundColor : kDefaultBackgroundColor set];
+    [_backgroundColor? _backgroundColor : DefaultBackgroundColor set];
     NSRectFill(_bounds);
     
     if (samples.count>1) {
-        [_foregroundColor? _foregroundColor : kDefaultForegroundColor set];
+        [_foregroundColor? _foregroundColor : DefaultForegroundColor set];
         
         for (u_int16_t i = 0; i<samples.count-1; i++) {
             float sample = [samples[i] floatValue];
             
             u_int16_t height = 0;
             
-            //When I checked, roughly less than -57 was inaudible
+            //Testing suggests less than -57 is inaudible
+            //Map 0 to -60 scale to a 1 to 0 scale
             if (sample > -57) {
-                //Map the 0 to -60 scale to a 1 to 0 scale
                 height = (map(sample, -60, 0, 0, 1))*_bounds.size.height;
             }
             
@@ -160,7 +164,7 @@ double map(double x, double in_min, double in_max, double out_min, double out_ma
         }
         
         NSRect darken = NSMakeRect(samples.count*_sampleWidth, 0, _bounds.size.width-(samples.count*_sampleWidth), _bounds.size.height);
-        [_inactiveColor? _inactiveColor : kDefaultInactiveColor set];
+        [_inactiveColor? _inactiveColor : DefaultInactiveColor set];
         NSRectFill(darken);
     }
 }

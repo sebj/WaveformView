@@ -7,7 +7,7 @@
 #import "HybridWaveformView.h"
 #import "WaveformView.h"
 
-#define observe(x) [self addObserver:self forKeyPath:x options:NSKeyValueObservingOptionNew context:NULL]
+#define observeKey(x) [self addObserver:self forKeyPath:x options:NSKeyValueObservingOptionNew context:NULL]
 
 @implementation HybridWaveformView
 
@@ -15,16 +15,23 @@
 
 - (id)initWithFrame:(NSRect)frame {
     self = [super initWithFrame:frame];
-    if (self) {
-        _fileView = [[WaveformView alloc] initWithFrame:_frame];
-        
-        observe(@"foregroundColor");
-        observe(@"backgroundColor");
-        observe(@"trimEnabled");
-        observe(@"trimHandleColor");
-        observe(@"inactiveColor");
-    }
+    if (self) [self setup];
     return self;
+}
+
+- (instancetype)initWithCoder:(NSCoder *)coder {
+    self = [super initWithCoder:coder];
+    if (self) [self setup];
+    return self;
+}
+
+- (void)setup {
+    _fileView = [[WaveformView alloc] initWithFrame:_frame];
+    observeKey(@"foregroundColor");
+    observeKey(@"backgroundColor");
+    observeKey(@"trimEnabled");
+    observeKey(@"trimHandleColor");
+    observeKey(@"inactiveColor");
 }
 
 #if TARGET_INTERFACE_BUILDER
