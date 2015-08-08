@@ -16,7 +16,7 @@
 /**
  * Access the WaveformView (files only) to direct all trim, play, stop etc. commands to it.
  */
-@property WaveformView *fileView;
+@property (strong) WaveformView *fileView;
 
 
 /**
@@ -29,5 +29,7 @@ IBInspectable @property BOOL trimEnabled;
 
 IBInspectable @property (strong) NSColor *trimHandleColor;
 IBInspectable @property (strong) NSColor *inactiveColor;
+
+@property (weak) id delegate;
 
 @end

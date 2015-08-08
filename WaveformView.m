@@ -168,6 +168,10 @@
     return;
     #endif
     
+    if (self.window && !(self.window.occlusionState & NSWindowOcclusionStateVisible)) {
+        return;
+    }
+    
     if (currentAsset) {
         if (points) {
             if (!cacheImage) cacheImage = [self waveformImage];

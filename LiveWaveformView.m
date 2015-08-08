@@ -85,8 +85,8 @@ double map(double x, double in_min, double in_max, double out_min, double out_ma
         [inv setSelector:aSelector];
         [inv setTarget:originalDelegate];
         
-        [inv setArgument:&(_recorder) atIndex:2]; //arguments 0 and 1 are self and _cmd respectively, automatically set by NSInvocation
-        [inv setArgument:&(error) atIndex:3]; //arguments 0 and 1 are self and _cmd respectively, automatically set by NSInvocation
+        [inv setArgument:&(_recorder) atIndex:2]; //Arguments 0 and 1 are self and _cmd, automatically set
+        [inv setArgument:&(error) atIndex:3]; //Arguments 0 and 1 are self and _cmd, automatically set
         
         [inv invoke];
     }
@@ -102,9 +102,8 @@ double map(double x, double in_min, double in_max, double out_min, double out_ma
         [inv setSelector:aSelector];
         [inv setTarget:originalDelegate];
         
-        [inv setArgument:&(_recorder) atIndex:2]; //arguments 0 and 1 are self and _cmd respectively, automatically set by NSInvocation
-        [inv setArgument:&(flag) atIndex:3]; //arguments 0 and 1 are self and _cmd respectively, automatically set by NSInvocation
-        
+        [inv setArgument:&(_recorder) atIndex:2]; //Arguments 0 and 1 are self and _cmd, automatically set
+        [inv setArgument:&(flag) atIndex:3]; //Arguments 0 and 1 are self and _cmd, automatically set        
         [inv invoke];
     }
     
@@ -123,8 +122,9 @@ double map(double x, double in_min, double in_max, double out_min, double out_ma
 #pragma mark Other
 
 - (void)refresh {
+    
     if (_recorder && _recorder.isRecording) {
-        if (samples.count*_sampleWidth > _bounds.size.width) [samples removeObjectAtIndex:0];
+        if (floor(samples.count*_sampleWidth) > ceil(_bounds.size.width)) [samples removeObjectAtIndex:0];
         
         [_recorder updateMeters];
         [samples addObject:@(round([_recorder averagePowerForChannel:0]))];
@@ -145,6 +145,10 @@ double map(double x, double in_min, double in_max, double out_min, double out_ma
     [_backgroundColor? _backgroundColor : DefaultBackgroundColor set];
     NSRectFill(_bounds);
     
+    if (self.window && !(self.window.occlusionState & NSWindowOcclusionStateVisible)) {
+        return;
+    }
+    
     if (samples.count>1) {
         [_foregroundColor? _foregroundColor : DefaultForegroundColor set];
         
@@ -155,7 +159,7 @@ double map(double x, double in_min, double in_max, double out_min, double out_ma
             
             //Testing suggests less than -57 is inaudible
             //Map 0 to -60 scale to a 1 to 0 scale
-            if (sample > -57) {
+            if (sample >= -60) {
                 height = (map(sample, -60, 0, 0, 1))*_bounds.size.height;
             }
             
@@ -163,7 +167,15 @@ double map(double x, double in_min, double in_max, double out_min, double out_ma
             NSRectFillUsingOperation(rect, NSCompositeSourceOver);
         }
         
-        NSRect darken = NSMakeRect(samples.count*_sampleWidth, 0, _bounds.size.width-(samples.count*_sampleWidth), _bounds.size.height);
+        if (_drawsCenterLine) {
+            //[_foregroundColor? _foregroundColor : DefaultForegroundColor setFill];
+            
+            NSBezierPath *centerLine = [NSBezierPath bezierPathWithRect:NSMakeRect(0, round((_bounds.size.height/2)-1), _bounds.size.width, 2)];
+            [centerLine fill];
+        }
+        
+        float x = round(samples.count*_sampleWidth);
+        NSRect darken = NSMakeRect(x, 0, _bounds.size.width-x, _bounds.size.height);
         [_inactiveColor? _inactiveColor : DefaultInactiveColor set];
         NSRectFill(darken);
     }

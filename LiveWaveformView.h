@@ -30,6 +30,8 @@ IBInspectable @property (strong) NSColor *foregroundColor;
 IBInspectable @property (strong) NSColor *backgroundColor;
 IBInspectable @property (strong) NSColor *inactiveColor;
 
+IBInspectable @property BOOL drawsCenterLine;
+
 /*
  * View takes control of the recorder. Recommended to use methods below.
  */

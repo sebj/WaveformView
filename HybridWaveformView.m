@@ -7,31 +7,36 @@
 #import "HybridWaveformView.h"
 #import "WaveformView.h"
 
-#define observeKey(x) [self addObserver:self forKeyPath:x options:NSKeyValueObservingOptionNew context:NULL]
-
 @implementation HybridWaveformView
 
 @dynamic inactiveColor;
 
 - (instancetype)initWithFrame:(NSRect)frame {
     self = [super initWithFrame:frame];
-    if (self) [self setup];
+    if (self) {
+        [self addTrackingRect:_bounds owner:self userData:nil assumeInside:NO];
+    }
     return self;
 }
 
 - (instancetype)initWithCoder:(NSCoder *)coder {
     self = [super initWithCoder:coder];
-    if (self) [self setup];
+    if (self) {
+        [self addTrackingRect:_bounds owner:self userData:nil assumeInside:NO];
+    }
     return self;
 }
 
-- (void)setup {
-    _fileView = [[WaveformView alloc] initWithFrame:_frame];
-    observeKey(@"foregroundColor");
-    observeKey(@"backgroundColor");
-    observeKey(@"trimEnabled");
-    observeKey(@"trimHandleColor");
-    observeKey(@"inactiveColor");
+- (void)mouseEntered:(NSEvent *)theEvent {
+    if (_delegate && [_delegate respondsToSelector:@selector(mouseEntered:)]) {
+        [_delegate mouseEntered:theEvent];
+    }
+}
+
+- (void)mouseExited:(NSEvent *)theEvent {
+    if (_delegate && [_delegate respondsToSelector:@selector(mouseExited:)]) {
+        [_delegate mouseExited:theEvent];
+    }
 }
 
 #if TARGET_INTERFACE_BUILDER
@@ -41,27 +46,17 @@
 }
 #endif
 
-//Not the best..
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-    if (object == self && _fileView) {
-        SEL selector = NSSelectorFromString([NSString stringWithFormat:@"set%@:",[keyPath stringByReplacingCharactersInRange:NSMakeRange(0,1) withString:[keyPath substringToIndex:1].uppercaseString]]);
-        
-        NSInvocation *inv = [NSInvocation invocationWithMethodSignature:[_fileView methodSignatureForSelector:selector]];
-        [inv setSelector:selector];
-        [inv setTarget:_fileView];
-        
-        id obj = change[@"new"];
-        
-        //Arguments 0 and 1 are self and _cmd respectively, automatically set by NSInvocation
-        [keyPath isEqualToString:@"trimEnabled"]? [inv setArgument:&_trimEnabled atIndex:2] : [inv setArgument:&(obj) atIndex:2];
-        
-        [inv invoke];
-    }
-}
-
 //Overriding from LiveWaveformView superclass
 - (void)finishedRecording {
     [_fileView loadURL:self.recorder.url];
+    
+    _fileView = [[WaveformView alloc] initWithFrame:_frame];
+    _fileView.foregroundColor = self.foregroundColor;
+    _fileView.backgroundColor = self.backgroundColor;
+    _fileView.trimEnabled = self.trimEnabled;
+    _fileView.trimHandleColor = self.trimHandleColor;
+    _fileView.inactiveColor = self.inactiveColor;
+    _fileView.drawsCenterLine = self.drawsCenterLine;
     
     [self.superview addSubview:_fileView positioned:NSWindowBelow relativeTo:self];
     [self.animator setAlphaValue:0];
