@@ -17,7 +17,7 @@ double map(double x, double in_min, double in_max, double out_min, double out_ma
     return out_min + slope * (x - in_min);
 }
 
-- (id)initWithFrame:(NSRect)frame {
+- (instancetype)initWithFrame:(NSRect)frame {
     self = [super initWithFrame:frame];
     if (self) [self setup];
     return self;
