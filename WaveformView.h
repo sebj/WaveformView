@@ -24,16 +24,15 @@ IBInspectable @property BOOL trimEnabled;
  */
 @property (readonly) CMTimeRange trimRange;
 
-@property (strong) IBInspectable NSColor *foregroundColor;
-@property (strong) IBInspectable NSColor *backgroundColor;
-@property (strong) IBInspectable NSColor *trimHandleColor;
-@property (strong) IBInspectable NSColor *inactiveColor;
+@property (strong, nullable) IBInspectable NSColor *foregroundColor;
+@property (strong, nullable) IBInspectable NSColor *backgroundColor;
+@property (strong, nullable) IBInspectable NSColor *trimHandleColor;
+@property (strong, nullable) IBInspectable NSColor *inactiveColor;
 
 IBInspectable @property BOOL drawsCenterLine;
 
-
-- (BOOL)loadFileWithPath:(NSString*)filePath;
-- (BOOL)loadURL:(NSURL*)aURL;
+- (BOOL)loadFileWithPath:(nullable NSString*)filePath;
+- (BOOL)loadURL:(nullable NSURL*)aURL;
 
 - (void)play;
 - (void)stop;
@@ -41,6 +40,6 @@ IBInspectable @property BOOL drawsCenterLine;
 /**
  * Returns an NSImage with the waveform, the same size as this view's bounds
  */
-- (NSImage*)waveformImage;
+- (nonnull NSImage*)waveformImage;
 
 @end

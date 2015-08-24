@@ -26,16 +26,16 @@ IB_DESIGNABLE
  */
 IBInspectable @property float sampleWidth;
 
-IBInspectable @property (strong) NSColor *foregroundColor;
-IBInspectable @property (strong) NSColor *backgroundColor;
-IBInspectable @property (strong) NSColor *inactiveColor;
+IBInspectable @property (strong, nullable) NSColor *foregroundColor;
+IBInspectable @property (strong, nullable) NSColor *backgroundColor;
+IBInspectable @property (strong, nullable) NSColor *inactiveColor;
 
 IBInspectable @property BOOL drawsCenterLine;
 
 /*
  * View takes control of the recorder. Recommended to use methods below.
  */
-@property (strong, setter = attachToRecorder:) AVAudioRecorder *recorder;
+@property (strong, nullable, setter = attachToRecorder:) AVAudioRecorder *recorder;
 
 /**
  * The following methods take over from AVAudioRecorder:
@@ -43,7 +43,7 @@ IBInspectable @property BOOL drawsCenterLine;
 
 - (void)record;
 - (void)recordForDuration:(NSTimeInterval)aDuration;
-- (void)recordForDuration:(NSTimeInterval)aDuration FinishBlock:(void (^)())aBlock;
+- (void)recordForDuration:(NSTimeInterval)aDuration FinishBlock:(nullable void (^)())aBlock;
 
 - (void)stop;
 

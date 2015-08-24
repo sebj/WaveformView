@@ -103,11 +103,11 @@
 
 #pragma mark Load files
 
-- (BOOL)loadFileWithPath:(NSString*)filePath {
+- (BOOL)loadFileWithPath:(nullable NSString*)filePath {
     return [self loadURL:[NSURL fileURLWithPath:filePath]];
 }
 
-- (BOOL)loadURL:(NSURL*)aURL{
+- (BOOL)loadURL:(nullable NSURL*)aURL{
     currentAsset = [AVURLAsset URLAssetWithURL:aURL options:nil];
     return [self processWaveformForAsset:currentAsset];
 }
@@ -206,7 +206,7 @@
     }
 }
 
-- (NSImage*)waveformImage {
+- (nonnull NSImage*)waveformImage {
     NSImage *image = [[NSImage alloc] initWithSize:_bounds.size];
     [image lockFocus];
     [self drawWaveform];

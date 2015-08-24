@@ -31,6 +31,9 @@ double map(double x, double in_min, double in_max, double out_min, double out_ma
 
 - (void)setup {
     _sampleWidth = 2.0f;
+    _backgroundColor = DefaultBackgroundColor;
+    _foregroundColor = DefaultForegroundColor;
+    _inactiveColor = DefaultInactiveColor;
 }
 
 #pragma mark Recording
@@ -53,7 +56,7 @@ double map(double x, double in_min, double in_max, double out_min, double out_ma
     [self recordForDuration:aDuration FinishBlock:nil];
 }
 
-- (void)recordForDuration:(NSTimeInterval)aDuration FinishBlock:(void (^)())aBlock {
+- (void)recordForDuration:(NSTimeInterval)aDuration FinishBlock:(nullable void (^)())aBlock {
     [self prepareToRecord];
     
     if (aDuration > 0.0) {
